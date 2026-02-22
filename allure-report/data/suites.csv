@@ -1,4 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","1911","test_login_success","tests","Sun Feb 22 14:42:25 CET 2026","passed","Sun Feb 22 14:42:27 CET 2026","","test_login","",""
-"","11049","test_e2e_01_account_crud","tests","Sun Feb 22 14:41:54 CET 2026","passed","Sun Feb 22 14:42:05 CET 2026","","test_e2e_01_account_crud","",""
-"","11943","test_e2e_02_opportunity_crud","tests","Sun Feb 22 14:42:10 CET 2026","passed","Sun Feb 22 14:42:22 CET 2026","","test_e2e_02_opportunity_crud","",""

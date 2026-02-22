@@ -3,15 +3,11 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 
 from core.config import BASE_URL
+from pages.base_page import BasePage
 
-
-class LoginPage:
+class LoginPage(BasePage):
     USER_SELECT = (By.NAME, "username")
     LOGIN_BUTTON = (By.ID, "btn-login")
-
-    def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 20)
 
     def open(self):
         self.driver.get(BASE_URL)

@@ -3,7 +3,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException, \
+    ElementClickInterceptedException
 from core.config import APP_URL
 
 class BasePage:
@@ -73,3 +74,46 @@ class BasePage:
         el = self.wait_clickable(locator)
         self.driver.execute_script("arguments[0].click();", el)
         return self
+
+    def open_dropdown(self, toggle_locator, menu_locator, retries: int = 3):
+        last_exc = None
+        for _ in range(retries):
+            try:
+                self.smart_click_visible(toggle_locator)
+                self.wait.until(lambda d: any(m.is_displayed() for m in d.find_elements(*menu_locator)))
+                return self
+            except Exception as e:
+                last_exc = e
+        raise last_exc
+
+    def smart_click_visible(self, locator, retries: int = 3):
+        last_exc = None
+        for _ in range(retries):
+            try:
+                els = self.driver.find_elements(*locator)
+                for el in els:
+                    try:
+                        if el.is_displayed() and el.is_enabled():
+                            self._scroll_to(el)
+                            try:
+                                el.click()
+                                return self
+                            except (ElementClickInterceptedException, WebDriverException):
+                                try:
+                                    ActionChains(self.driver).move_to_element(el).pause(0.05).click(el).perform()
+                                    return self
+                                except WebDriverException:
+                                    self.driver.execute_script("arguments[0].click();", el)
+                                    return self
+                    except StaleElementReferenceException:
+                        continue
+
+                raise TimeoutException(f"No visible enabled element for locator: {locator}")
+
+            except (StaleElementReferenceException, TimeoutException, WebDriverException) as e:
+                last_exc = e
+
+        raise last_exc
+
+    def _scroll_to(self, el):
+        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)

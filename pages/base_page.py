@@ -1,7 +1,9 @@
+from selenium.common import WebDriverException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-
+from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from core.config import APP_URL
 
 class BasePage:
@@ -31,4 +33,43 @@ class BasePage:
             el.send_keys(Keys.CONTROL, "a")
             el.send_keys(Keys.BACKSPACE)
         el.send_keys(text)
+        return self
+
+    def force_click(self, locator):
+        el = self.wait_visible(locator)
+        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+        try:
+            ActionChains(self.driver).move_to_element(el).pause(0.1).click(el).perform()
+        except WebDriverException:
+            self.driver.execute_script("arguments[0].click();", el)
+        return self
+
+    def force_click_visible(self, locator):
+        els = self.driver.find_elements(*locator)
+        for el in els:
+            if el.is_displayed() and el.is_enabled():
+                self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+                self.driver.execute_script("arguments[0].click();", el)
+                return self
+        raise TimeoutException(f"No visible enabled element for locator: {locator}")
+
+    def smart_click(self, locator):
+        el = self.wait_clickable(locator)
+        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", el)
+
+        try:
+            el.click()
+            return self
+        except (WebDriverException, StaleElementReferenceException):
+            pass
+
+        try:
+            el = self.wait_clickable(locator)
+            ActionChains(self.driver).move_to_element(el).pause(0.05).click(el).perform()
+            return self
+        except (WebDriverException, StaleElementReferenceException):
+            pass
+
+        el = self.wait_clickable(locator)
+        self.driver.execute_script("arguments[0].click();", el)
         return self
